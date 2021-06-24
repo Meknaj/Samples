@@ -1,0 +1,99 @@
+/*
+ * Copyright 2015 Stuart Kent
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+package com.example.amplify.lib.feedback;
+
+import ohos.aafwk.ability.AbilitySliceRuntimeException;
+import ohos.aafwk.content.Intent;
+import com.example.amplify.lib.IApp;
+import com.example.amplify.lib.IDevice;
+import com.example.amplify.lib.IEnvironment;
+import com.example.amplify.lib.utils.StringUtils;
+
+import ohos.aafwk.content.Operation;
+import ohos.bundle.AbilityInfo;
+import ohos.hiviewdfx.HiLog;
+import ohos.hiviewdfx.HiLogLabel;
+import ohos.os.ProcessManager;
+import ohos.rpc.RemoteException;
+import ohos.utils.IntentConstants;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import ohos.aafwk.ability.Ability;
+import ohos.utils.net.Uri;
+
+import java.util.List;
+
+
+// Source: https://developer.Huawei.com/public/apis/earn/in-app-purchasing/docs-v2/deep-linking-to-the-Huawei-client
+public final class HuaweiAppGalleryFeedbackCollector implements IFeedbackCollector {
+    @Nullable
+    private final String overridePackageName;
+
+    public HuaweiAppGalleryFeedbackCollector() {
+        this.overridePackageName = null;
+    }
+
+    public HuaweiAppGalleryFeedbackCollector(@NotNull final String overridePackageName) {
+        this.overridePackageName = overridePackageName;
+    }
+
+    @Override
+    public boolean tryCollectingFeedback(
+            @NotNull final Ability currentAbility,
+            //     @NotNull final Activity currentActivity,
+            @NotNull final IApp app,
+            @NotNull final IEnvironment environment,
+            @NotNull final IDevice device) {
+
+        final String packageName = StringUtils.defaultIfBlank(overridePackageName, currentAbility.getAbilityName());
+       try {
+           startHuaweiAppgallery(currentAbility);
+           return true;
+        } catch (final  AbilitySliceRuntimeException ignored) {
+
+            try {
+                launchMarketUrl(currentAbility);
+                return true;
+            } catch (final AbilitySliceRuntimeException ignored2) {
+                return false;
+            }
+        }
+   }
+
+   private void launchMarketUrl(Ability ability) {
+       Intent intent = new Intent();
+       Intent.OperationBuilder operationBuilder = new Intent.OperationBuilder();
+       operationBuilder.withUri(Uri.parse("https://appgallery.huawei.com"));
+       operationBuilder.withAction(IntentConstants.ACTION_SEARCH);
+       Operation operation = operationBuilder.build();
+       intent.setOperation(operation);
+       ability.startAbility(intent);
+   }
+
+   private void startHuaweiAppgallery(Ability ability) {
+       List<AbilityInfo> list;
+        Intent intent = new Intent();
+       Intent.OperationBuilder operationBuilder = new Intent.OperationBuilder();
+       operationBuilder.withBundleName("com.huawei.appmarket");
+       operationBuilder.withFlags(Intent.FLAG_ABILITY_NEW_MISSION | Intent.FLAG_ABILITY_CLEAR_MISSION);
+
+       Operation operation = operationBuilder.build();
+       intent.formatUri(Uri.parse("appmarket://details?id="));
+       intent.setOperation(operation);
+       ability.startAbility(intent);
+   }
+}
