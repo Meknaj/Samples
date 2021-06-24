@@ -61,7 +61,7 @@ public final class HuaweiAppGalleryFeedbackCollector implements IFeedbackCollect
 
         final String packageName = StringUtils.defaultIfBlank(overridePackageName, currentAbility.getAbilityName());
        try {
-           startHuaweiAppgallery(currentAbility);
+           startHuaweiAppgallery(currentAbility, packageName);
            return true;
         } catch (final  AbilitySliceRuntimeException ignored) {
 
@@ -84,15 +84,16 @@ public final class HuaweiAppGalleryFeedbackCollector implements IFeedbackCollect
        ability.startAbility(intent);
    }
 
-   private void startHuaweiAppgallery(Ability ability) {
+   private void startHuaweiAppgallery(Ability ability, String packageName) {
        List<AbilityInfo> list;
         Intent intent = new Intent();
        Intent.OperationBuilder operationBuilder = new Intent.OperationBuilder();
        operationBuilder.withBundleName("com.huawei.appmarket");
-       operationBuilder.withFlags(Intent.FLAG_ABILITY_NEW_MISSION | Intent.FLAG_ABILITY_CLEAR_MISSION);
-
+       operationBuilder.withFlags(Intent.FLAG_ABILITY_NEW_MISSION);
+        operationBuilder.withAction("com.huawei.appmarket.intent.action.AppDetail");
        Operation operation = operationBuilder.build();
-       intent.formatUri(Uri.parse("appmarket://details?id="));
+     //  packageName = "com.buuuk.st";  //UNCOMMENT THIS TO CHECK IF APP GETS LAUNCHED
+       intent.setParam("APP_PACKAGENAME", packageName);
        intent.setOperation(operation);
        ability.startAbility(intent);
    }
